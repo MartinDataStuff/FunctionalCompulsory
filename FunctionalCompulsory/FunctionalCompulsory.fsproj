@@ -6,7 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Word Guesser Game\Config.fs" />
+    <Compile Include="Word Guesser Game\WordGuesser.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Propositions\" />
   </ItemGroup>
 
 </Project>
