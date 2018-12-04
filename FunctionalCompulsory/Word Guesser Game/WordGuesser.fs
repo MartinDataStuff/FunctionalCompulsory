@@ -2,15 +2,7 @@
 
 open System;;
 open Config;;
-
 //Creates the hiddenword for the user
-//let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
-//    String.iter(fun g -> wordToFind.Replace(g,HIDDEN.ToString())) listOfGuesses
-
-   //wordToFind |> String.map (fun char -> 
-   //   if Seq.exists ((=) char) listOfGuesses 
-   //   then char 
-   //   else HIDDEN);;
 let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
     let rec ReplaceWordFromStringList = function
     |("", []) -> ""
@@ -20,15 +12,7 @@ let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
     let rec GetHiddenIndex = function
     |("", [],r) -> []
     |(s,[],r) -> r
-    |(s,n::l,r) -> GetHiddenIndex (s.Replace(n, HIDDEN.ToString() |> String.replicate (String.length n)), l,r)
-    
-
-    //let wordToFind = "tritriangle"
-    //let listOfGuesses = ["tri"; "ria";]
-    //let foundIndex = listOfGuesses |> List.fold (fun s w ->  (wordToFind.IndexOf(w),wordToFind.IndexOf(w)+w.Length)::s) [] |> List.rev
-    //let hiddenWord = foundIndex |> List.fold (fun s i -> s + if (i fst) > -1 then  ) ""
-    
-
+    |(s,n::l,r) -> GetHiddenIndex (s.Replace(n, HIDDEN.ToString() |> String.replicate (String.length n)), l,r) 
 
     let MakeHiddenWord word usedWords =
         List.zip(word   |> Seq.toList 
@@ -36,32 +20,43 @@ let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
                 (ReplaceWordFromStringList (word,usedWords) |> Seq.toList 
                                                             |> List.map string)
     (MakeHiddenWord wordToFind listOfGuesses) |> List.fold (fun s (w,i) -> s + if w <> i || w = " " then w else HIDDEN.ToString()) "";;
-//    let chars = s
-//let upperChars = Seq.map System.Char.ToUpper chars
-//let strChars = Seq.map string upperChars
-//let result = String.concat "" strChars
-
 
 
 //Check if the input is valid, haven't been used before
 let ValidateGuess (usedGuesses: string list) (currentGuess) =
     not (usedGuesses |> List.exists ((=) currentGuess))
 
+
+//Have the program find a letter in the word that haven't been found before
+let GetHelp word used = 
+    let currentKnownWord = HiddenWord word used
+    let mutable moreKnownWord = currentKnownWord
+    let mutable index = 0
+    let mutable guess = ""
+    while moreKnownWord = currentKnownWord do
+        guess <- (word.Chars index).ToString()
+        moreKnownWord <- HiddenWord word (guess::used)
+        index <- index + 1
+    guess
+
 //Reads the user input and returns the input
-let rec GetGuess used =
+let rec GetGuess wordToFind used =
+    Console.TreatControlCAsInput <- true
     printf "Used %A. Guess: " used
     
     let mutable input = Console.ReadKey(true)
     let mutable fullString = ""
-    while(input.Key <> ConsoleKey.Enter) do 
+    let mutable help = false
+    while(input.Key <> ConsoleKey.Enter && not help) do 
         if input.Key = ConsoleKey.Backspace
         then fullString <- fullString.Remove(fullString.Length-1)
         else fullString <- fullString + input.KeyChar.ToString()
-        printf "%s" (input.KeyChar.ToString())
-        input <- Console.ReadKey(true)
-
         if(HELP && input.Modifiers = ConsoleModifiers.Control && input.Key = ConsoleKey.H) then
-                Console.WriteLine("Help should arrive");
+                fullString <- GetHelp wordToFind used
+                help <- true
+        printf "%s" (input.KeyChar.ToString())
+        if not help then input <- Console.ReadKey(true)
+                
 
     let input = if not CASE_SENSITIVE 
                 then fullString.ToUpper()
@@ -69,12 +64,12 @@ let rec GetGuess used =
     
     let currentGuess =  if MULTIPLE 
                         then input
-                        else (if input.Length > 0 then input.Chars(0).ToString() else "")
+                        else (if input.Length > 0 then input.Chars(0).ToString() else " ")
        
 
     if ValidateGuess used (currentGuess)
     then currentGuess
-    else GetGuess used
+    else GetGuess wordToFind used
 
 
 let rec play (wordToFind:string) (usedGuesses: string list) =
@@ -82,7 +77,7 @@ let rec play (wordToFind:string) (usedGuesses: string list) =
     let hiddenWord = HiddenWord wordToFind usedGuesses
     printfn "%s" hiddenWord
     if wordToFind <> hiddenWord then 
-        let guess = GetGuess usedGuesses
+        let guess = GetGuess wordToFind usedGuesses
         let used = guess::usedGuesses
         play wordToFind used
     else
