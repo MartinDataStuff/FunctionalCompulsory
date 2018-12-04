@@ -6,7 +6,6 @@ open WordGuesser
 
 [<EntryPoint>]
 let main argv =
-
     do  StartGame
 
     printfn "Hello World from F#!"

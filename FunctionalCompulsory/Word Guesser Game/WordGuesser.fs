@@ -98,7 +98,10 @@ let StartGame =
     while playGame = playGameState.Play do
         System.Console.Clear()
         printfn "Welcome to Word Guesser"    
-        let word = WORDS.[Random().Next(WORDS.Length)]
+        let wordlist = if(not MULTIPLE)
+                        then WORDS |> List.filter(fun x -> not (x.Contains(" ")))
+                        else WORDS
+        let word = wordlist.[Random().Next(wordlist.Length)]
         printfn "The length of the word is %d" word.Length
         let usedWords = []
         do play word usedWords
