@@ -3,7 +3,6 @@
 open System;;
 open Config;;
 
-
 //Creates the hiddenword for the user
 //let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
 //    String.iter(fun g -> wordToFind.Replace(g,HIDDEN.ToString())) listOfGuesses
@@ -49,32 +48,33 @@ let ValidateGuess (usedGuesses: string list) (currentGuess) =
     not (usedGuesses |> List.exists ((=) currentGuess))
 
 //Reads the user input and returns the input
-let rec ReadKeyPress used =
+let rec GetGuess used =
     printf "Used %A. Guess: " used
     
-    if (HELP && Console.ReadKey().Modifiers = ConsoleModifiers.Control)
-        then
-            if Console.ReadKey(true).KeyChar |> Char.ToUpper = 'H'
-                then printf "HELP"
+    let mutable input = Console.ReadKey(true)
+    let mutable fullString = ""
+    while(input.Key <> ConsoleKey.Enter) do 
+        if input.Key = ConsoleKey.Backspace
+        then fullString <- fullString.Remove(fullString.Length-1)
+        else fullString <- fullString + input.KeyChar.ToString()
+        printf "%s" (input.KeyChar.ToString())
+        input <- Console.ReadKey(true)
+
+        if(HELP && input.Modifiers = ConsoleModifiers.Control && input.Key = ConsoleKey.H) then
+                Console.WriteLine("Help should arrive");
 
     let input = if not CASE_SENSITIVE 
-                then Console.ReadLine().ToUpper()
-                else Console.ReadLine()
+                then fullString.ToUpper()
+                else fullString
     
     let currentGuess =  if MULTIPLE 
-                            then input
-                            else (if input.Length > 0 then input.Chars(0).ToString() else "")
+                        then input
+                        else (if input.Length > 0 then input.Chars(0).ToString() else "")
        
 
-    if ValidateGuess used  (currentGuess)
+    if ValidateGuess used (currentGuess)
     then currentGuess
-    else ReadKeyPress used
-
-//Retrieves the guess
-let GetGuess used =
-   let guess = ReadKeyPress used
-   printfn "%A" guess
-   guess
+    else GetGuess used
 
 
 let rec play (wordToFind:string) (usedGuesses: string list) =

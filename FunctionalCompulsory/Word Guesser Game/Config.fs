@@ -10,7 +10,7 @@ let CASE_SENSITIVE = false
 let ALLOW_BLANKS = false 
 
 //if this is true, the program will make a correct guess, when the user can type Crtl-H
-let HELP = false 
+let HELP = true 
 
 //if this is true, the user might enter more than one character; it will count as one guess. For instance; if the user enters“ab”, all substrings with “ab” will be visible.
 let MULTIPLE = true 
