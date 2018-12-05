@@ -16,4 +16,4 @@ let HELP = true
 let MULTIPLE = true 
 
 //at list of strings. It is from this collection the program must get the random words to be guessed.
-let WORDS = ["WORDS"; "PENCIL";"triangle";"Capital"] 
+let WORDS = ["Words"; "Christmas Tree";"Santa Claus";"Presents";"Nissehue";"A Christmas Carol";"Yuletider"] 
