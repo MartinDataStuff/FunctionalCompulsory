@@ -4,22 +4,28 @@ open System;;
 open Config;;
 //Creates the hiddenword for the user
 let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
-    let rec ReplaceWordFromStringList = function
-    |("", []) -> ""
-    |(s,[]) -> s
-    |(s,n::l) -> ReplaceWordFromStringList (s.Replace(n, HIDDEN.ToString() |> String.replicate (String.length n)), l)
 
-    let rec GetHiddenIndex = function
-    |("", [],r) -> []
-    |(s,[],r) -> r
-    |(s,n::l,r) -> GetHiddenIndex (s.Replace(n, HIDDEN.ToString() |> String.replicate (String.length n)), l,r) 
+    let HIDDEN = '*'
+    let compare (firstWord:string) (secondWord:string) = 
+        if firstWord.Length = secondWord.Length then 
+            let firstWordList = firstWord |> Seq.toList |> List.map string
+            let secondWordList = secondWord |> Seq.toList |> List.map string
+            List.zip firstWordList secondWordList |> List.fold (fun s (f,l) -> s + (if f = HIDDEN.ToString() then l else f)) "" 
+        else ""
 
-    let MakeHiddenWord word usedWords =
-        List.zip(word   |> Seq.toList 
-                        |> List.map string) 
-                (ReplaceWordFromStringList (word,usedWords) |> Seq.toList 
-                                                            |> List.map string)
-    (MakeHiddenWord wordToFind listOfGuesses) |> List.fold (fun s (w,i) -> s + if w <> i || w = " " then w else HIDDEN.ToString()) "";;
+    let getHidden (word:string) (guess:string) = 
+        let inverseHidden = word.Replace(guess, HIDDEN |> string |> String.replicate (guess |> String.length))
+        List.zip(word |> Seq.toList |> List.map string) (inverseHidden |> Seq.toList |> List.map string)
+        |> List.fold (fun s (w,i) -> s + if w <> i || w = " " then w else HIDDEN.ToString()) ""
+
+
+    let rec findHiddenWord = function
+    | "",_ -> ""
+    | s,[] -> compare (HIDDEN |> string |> String.replicate (s|> String.length) ) (HIDDEN |> string |> String.replicate (s|> String.length) )
+    | s,[e] -> compare (getHidden s e) (HIDDEN |> string |> String.replicate (s|> String.length) )
+    | s,e::l -> compare (getHidden s e) (findHiddenWord (s, l))
+
+    findHiddenWord (wordToFind,listOfGuesses)
 
 
 //Check if the input is valid, haven't been used before
@@ -41,7 +47,6 @@ let GetHelp word used =
 
 //Reads the user input and returns the input
 let rec GetGuess wordToFind used =
-    Console.TreatControlCAsInput <- true
     printf "Used %A. Guess: " used
     
     let mutable input = Console.ReadKey(true)
@@ -57,7 +62,7 @@ let rec GetGuess wordToFind used =
         printf "%s" (input.KeyChar.ToString())
         if not help then input <- Console.ReadKey(true)
                 
-
+    printfn ""
     let input = if not CASE_SENSITIVE 
                 then fullString.ToUpper()
                 else fullString

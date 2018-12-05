@@ -10,6 +10,4 @@ open System.Threading
 let main argv =
     
     do  StartGame
-
-    printfn "Hello World from F#!"
     0 // return an integer exit code
