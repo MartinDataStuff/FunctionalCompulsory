@@ -3,22 +3,25 @@
 open System;;
 open Config;;
 //Creates the hiddenword for the user
+//Defines the hiddenword method for the user to guess
 let HiddenWord (wordToFind:string) (listOfGuesses : string list) =
-
-    let HIDDEN = '*'
+    
+    //Compares two strings, and then checks the length of each string against each other.
+    //It then creates a string and adds each checked string to its own stringlist.
     let compare (firstWord:string) (secondWord:string) = 
         if firstWord.Length = secondWord.Length then 
             let firstWordList = firstWord |> Seq.toList |> List.map string
             let secondWordList = secondWord |> Seq.toList |> List.map string
             List.zip firstWordList secondWordList |> List.fold (fun s (f,l) -> s + (if f = HIDDEN.ToString() then l else f)) "" 
         else ""
-
+    
+    //Checks if the character exists in the hidden word, and then inverses it to keep the unguesses characters hidden from the user
     let getHidden (word:string) (guess:string) = 
         let inverseHidden = word.Replace(guess, HIDDEN |> string |> String.replicate (guess |> String.length))
         List.zip(word |> Seq.toList |> List.map string) (inverseHidden |> Seq.toList |> List.map string)
         |> List.fold (fun s (w,i) -> s + if w <> i || w = " " then w else HIDDEN.ToString()) ""
 
-
+    //recursive function for finding the hidden word.
     let rec findHiddenWord = function
     | "",_ -> ""
     | s,[] -> compare (HIDDEN |> string |> String.replicate (s|> String.length) ) (HIDDEN |> string |> String.replicate (s|> String.length) )
@@ -33,7 +36,7 @@ let ValidateGuess (usedGuesses: string list) (currentGuess) =
     not (usedGuesses |> List.exists ((=) currentGuess))
 
 
-//Have the program find a letter in the word that haven't been found before
+//Have the program find a letter in the word that haven't been found before.
 let GetHelp word used = 
     let currentKnownWord = HiddenWord word used
     let mutable moreKnownWord = currentKnownWord
@@ -49,9 +52,14 @@ let GetHelp word used =
 let rec GetGuess wordToFind used =
     printf "Used %A. Guess: " used
     
+    //defines the variables for input. Mutable in this case means the variable can be changed during run time.
     let mutable input = Console.ReadKey(true)
     let mutable fullString = ""
     let mutable help = false
+
+    //while loop for the user's input.
+    //Also checks the input key, and if its a backspace removes the most recently typed key.
+    //If the inputkey is not a backspace then it adds it to the full string.
     while(input.Key <> ConsoleKey.Enter && not help) do 
         if input.Key = ConsoleKey.Backspace
         then fullString <- fullString.Remove(fullString.Length-1)
@@ -67,6 +75,7 @@ let rec GetGuess wordToFind used =
                 then fullString.ToUpper()
                 else fullString
     
+    //Defines the current Guess
     let currentGuess =  if MULTIPLE 
                         then input
                         else (if input.Length > 0 then input.Chars(0).ToString() else " ")
@@ -76,7 +85,7 @@ let rec GetGuess wordToFind used =
     then currentGuess
     else GetGuess wordToFind used
 
-
+//Recursive function comparing the hidden word against the guesses of the user, and prints the amount of guesses used
 let rec play (wordToFind:string) (usedGuesses: string list) =
     let wordToFind = if not CASE_SENSITIVE then wordToFind.ToUpper() else wordToFind
     let hiddenWord = HiddenWord wordToFind usedGuesses
@@ -87,14 +96,16 @@ let rec play (wordToFind:string) (usedGuesses: string list) =
         play wordToFind used
     else
         printfn "You guessed it! Using only %d guesses!" usedGuesses.Length
-      //if wordToFind.IndexOf(guess) > 0
-      //then play wordToFind used guesses
-      //else play wordToFind used (guesses+1)
 
 
+//Function for playing the game, aswell as the states of the game for stopping or playing it.
 type playGameState = Play=0 | Stop=1 | Error=2
 let StartGame = 
+    
+    //Mutable object that controls the game state
     let mutable playGame = playGameState.Play
+
+    //while loop for our game
     while playGame = playGameState.Play do
         System.Console.Clear()
         printfn "Welcome to Word Guesser"    
@@ -105,11 +116,16 @@ let StartGame =
         printfn "The length of the word is %d" word.Length
         let usedWords = []
         do play word usedWords
-        printfn "Do you want to play again? Y/N"  
+        printfn "Do you want to play again? Y/N" 
+        
+        //Input for starting the game, if Y then the game state changes to playing, if N then game state changes to stop.
+        //If it's anything else it gives an error
         let input = Console.ReadKey(true).KeyChar |> Char.ToUpper
         playGame <- if input= 'Y' then playGameState.Play
                     elif input |> Char.ToUpper = 'N' then playGameState.Stop
                     else playGameState.Error
+
+        //While loop for the error game state stating you have to chose between Y and N
         while playGame = playGameState.Error do            
             printfn "Error, please choose between Y or N"  
             let input = Console.ReadKey(true).KeyChar |> Char.ToUpper
