@@ -109,7 +109,7 @@ let StartGame =
     while playGame = playGameState.Play do
         System.Console.Clear()
         printfn "Welcome to Word Guesser"    
-        let wordlist = if(not MULTIPLE)
+        let wordlist = if(not ALLOW_BLANKS)
                         then WORDS |> List.filter(fun x -> not (x.Contains(" ")))
                         else WORDS
         let word = wordlist.[Random().Next(wordlist.Length)]
